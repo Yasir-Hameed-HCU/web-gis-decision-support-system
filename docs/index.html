@@ -1,0 +1,446 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="author" content="Yasir Hameed">
+<meta name="description" content="A redundancy-aware service fragility index and Web GIS decision-support platform for hospital accessibility under restructuring in Mecklenburg-Vorpommern, Germany.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Yasir Hameed">
+<meta property="og:title" content="Healthcare Accessibility and Service Fragility in Mecklenburg-Vorpommern">
+<meta property="og:description" content="626,381 routed travel times across a 1 km population grid, a redundancy-aware fragility index, and closure simulation. Closing the largest hospital in the state costs no threshold access; closing one rural hospital costs 247,592 people.">
+<meta property="og:url" content="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/">
+<meta property="og:image" content="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/">
+<title>Healthcare Accessibility and Service Fragility in Mecklenburg-Vorpommern</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: academic project page. Narrow reading measure, full-bleed figure bands. */
+:root{
+  --paper:#f5f7f9; --card:#ffffff; --ink:#132c46; --body:#33465a; --mute:#6a7f93;
+  --line:#dce3ea; --rule:#c6d2dd; --teal:#0f7682; --sand:#9a6a10;
+  --stable:#1a7f45; --fragile:#c8780f; --critical:#bc2c22;
+  --disp:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0c1620; --card:#14202c; --ink:#e9eff5; --body:#bfccd9; --mute:#8699aa;
+  --line:#22323f; --rule:#2c3f4f; --teal:#49bcc8; --sand:#d9a44e;
+  --stable:#4cbb79; --fragile:#e8a44a; --critical:#e8655a; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#0c1620; --card:#14202c; --ink:#e9eff5; --body:#bfccd9; --mute:#8699aa;
+  --line:#22323f; --rule:#2c3f4f; --teal:#49bcc8; --sand:#d9a44e;
+  --stable:#4cbb79; --fragile:#e8a44a; --critical:#e8655a; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--body);font-family:var(--sans);
+  font-size:16.5px;line-height:1.68;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:22px}
+.col{max-width:66ch}
+h1,h2,h3{font-family:var(--disp);color:var(--ink);text-wrap:balance;margin:0}
+h1{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.14;font-weight:700;letter-spacing:-.012em}
+h2{font-size:clamp(1.35rem,2.9vw,1.85rem);line-height:1.22;font-weight:600;margin-bottom:.55rem}
+h3{font-family:var(--sans);font-size:.76rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--teal);font-weight:600;margin-bottom:.5rem}
+p{margin:0 0 1.05rem}
+a{color:var(--teal);text-underline-offset:3px}
+em{font-style:italic}
+.eyebrow{font-family:var(--sans);font-size:.72rem;font-weight:600;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--teal);margin:0 0 .85rem}
+section{padding-block:clamp(2.4rem,5.5vw,3.9rem);border-top:1px solid var(--line)}
+
+/* masthead */
+.mast{padding-block:clamp(2.4rem,6vw,4rem) 1.6rem;border-top:0}
+.byline{margin-top:1.5rem;font-size:.95rem;color:var(--body)}
+.byline b{color:var(--ink);font-weight:600}
+.byline span{color:var(--mute)}
+.res{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.6rem}
+.res a{display:inline-flex;align-items:center;gap:.45rem;font-family:var(--sans);
+  font-size:.86rem;font-weight:500;text-decoration:none;color:var(--ink);
+  background:var(--card);border:1px solid var(--rule);border-radius:2px;padding:.48rem .85rem}
+.res a:hover{border-color:var(--teal);color:var(--teal)}
+.res a i{font-style:normal;color:var(--teal);font-family:var(--mono);font-size:.78rem}
+
+/* video */
+.hero{margin-top:1.9rem;border:1px solid var(--rule);border-radius:3px;overflow:hidden;background:#0c1620}
+.hero video{display:block;width:100%;height:auto}
+.hcap{font-size:.8rem;color:var(--mute);margin-top:.6rem;line-height:1.5}
+
+/* abstract */
+.abstract{border-left:3px solid var(--teal);padding-left:1.4rem}
+.abstract p{font-size:1.04rem}
+
+/* results table */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--card);margin-top:1.4rem}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:560px}
+caption{caption-side:bottom;text-align:left;font-size:.8rem;color:var(--mute);
+  padding:.7rem .95rem 0;line-height:1.5}
+th,td{text-align:left;padding:.68rem .95rem;border-bottom:1px solid var(--line)}
+thead th{font-family:var(--sans);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mute);font-weight:600;border-bottom:1.5px solid var(--rule)}
+td+td,th+th{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:.86rem}
+tbody tr:last-child td{border-bottom:0}
+td b{color:var(--ink);font-family:var(--sans);font-weight:600}
+tr.hi td{background:color-mix(in srgb,var(--critical) 7%,transparent)}
+tr.hi td b,tr.hi td{color:var(--critical)}
+tr.ok td{color:var(--stable)}
+
+/* figures */
+figure{margin:0}
+.fig{margin-top:1.6rem}
+.fig img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:3px;background:#fff}
+figcaption{margin-top:.7rem;font-size:.82rem;color:var(--mute);line-height:1.55;max-width:88ch}
+figcaption b{color:var(--body);font-weight:600}
+.fig.narrow img{max-width:720px;margin-inline:auto}
+
+/* compare slider */
+.cmp{position:relative;margin-top:1.6rem;border:1px solid var(--line);border-radius:3px;
+  overflow:hidden;background:#fff;touch-action:pan-y}
+.cmp img{display:block;width:100%;height:auto}
+.cmp .top{position:absolute;inset:0;overflow:hidden;width:50%}
+.cmp .top img{position:absolute;top:0;left:0;height:100%;width:auto;max-width:none}
+.cmp .bar{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--teal);
+  transform:translateX(-1px);pointer-events:none}
+.cmp .knob{position:absolute;top:50%;left:50%;width:42px;height:42px;margin:-21px 0 0 -21px;
+  border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;
+  font-family:var(--mono);font-size:.8rem;pointer-events:none;box-shadow:0 2px 10px rgba(10,30,50,.35)}
+.cmp input[type=range]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.cmp .tag{position:absolute;top:12px;font-family:var(--sans);font-size:.76rem;font-weight:600;
+  background:rgba(19,44,70,.86);color:#fff;padding:.3rem .6rem;border-radius:2px;pointer-events:none}
+.cmp .tag.l{left:12px} .cmp .tag.r{right:12px}
+
+/* formula */
+.formula{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--sand);
+  border-radius:3px;padding:1.15rem 1.3rem;margin:1.4rem 0;overflow-x:auto}
+.formula code{font-family:var(--mono);font-size:1rem;color:var(--ink);white-space:nowrap}
+.terms{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
+.terms li{display:grid;grid-template-columns:3.4rem 1fr;gap:.9rem;align-items:baseline;font-size:.93rem}
+.terms .w{font-family:var(--mono);font-size:.82rem;color:var(--teal)}
+.terms b{color:var(--ink);font-weight:600}
+
+/* grid of notes */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(246px,1fr));gap:1.3rem;margin-top:1.5rem}
+.notes>div{min-width:0}
+.notes p{font-size:.92rem;margin:0}
+
+/* bibtex */
+pre{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:1rem 1.15rem;
+  overflow-x:auto;font-family:var(--mono);font-size:.8rem;line-height:1.6;color:var(--body);margin:1rem 0 0}
+footer{border-top:1px solid var(--line);padding-block:2.4rem 3.2rem;font-size:.9rem}
+.sel{font-family:var(--mono);font-size:.86rem;user-select:all;color:var(--body)}
+.foot-note{font-size:.8rem;color:var(--mute);margin-top:1.5rem;max-width:80ch;line-height:1.6}
+@media (max-width:470px){ body{font-size:15.5px} .terms li{grid-template-columns:3rem 1fr} }
+
+/* scenario carousel ------------------------------------------------------ */
+.carousel{margin-top:1.6rem}
+.cview{position:relative;border:1px solid var(--line);border-radius:3px;background:#fff;overflow:hidden}
+.cslide{display:none;margin:0}
+.cslide.on{display:block}
+.cslide img{display:block;width:100%;height:auto}
+.ctag{position:absolute;top:12px;left:12px;font-family:var(--sans);font-size:.76rem;font-weight:600;
+  background:rgba(19,44,70,.86);color:#fff;padding:.3rem .62rem;border-radius:2px;z-index:2}
+.cbar{display:flex;align-items:center;gap:.9rem;margin-top:.8rem;flex-wrap:wrap}
+.cbtn{appearance:none;border:1px solid var(--rule);background:var(--card);color:var(--ink);
+  border-radius:2px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;
+  font-family:var(--mono);font-size:.9rem;line-height:1;padding:0}
+.cbtn:hover{border-color:var(--teal);color:var(--teal)}
+.cbtn:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.cdots{display:flex;gap:.42rem;flex:1 1 auto;flex-wrap:wrap}
+.cdot{appearance:none;border:0;padding:0;width:9px;height:9px;border-radius:50%;
+  background:var(--rule);cursor:pointer}
+.cdot.on{background:var(--teal)}
+.cdot:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.ccount{font-family:var(--mono);font-size:.78rem;color:var(--mute);white-space:nowrap}
+.ccap{margin-top:.75rem;font-size:.82rem;color:var(--mute);line-height:1.55;max-width:88ch;min-height:3.4em}
+.ccap b{color:var(--body);font-weight:600}
+@media (max-width:470px){.ccap{min-height:5em}}
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">HafenCity Universit&auml;t Hamburg &middot; Lab for Geoinformatics and Geovisualization</p>
+    <h1>A Web GIS Decision-Support Platform for Healthcare Accessibility and Service Fragility Analysis under Hospital Restructuring in Mecklenburg-Vorpommern, Germany</h1>
+    <p class="byline"><b>Yasir Hameed</b><br>
+      <span>M.Sc. Geodesy and Geoinformatics &middot; supervised by Prof. Dr.-Ing. habil. Jochen Schiewe &middot; 2026</span></p>
+    <div class="res">
+      <a href="https://34-107-87-228.sslip.io" target="_blank" rel="noopener"><i>&rarr;</i>Live platform</a>
+      <a href="#method"><i>&rarr;</i>Method</a>
+      <a href="#results"><i>&rarr;</i>Results</a>
+      <a href="#resources"><i>&rarr;</i>Code and data</a>
+    </div>
+
+    <div class="hero">
+      <video src="assets/walkthrough.mp4" preload="none" poster="preview.jpg" autoplay loop muted playsinline></video>
+    </div>
+    <p class="hcap">The platform, recorded live. Switching service group, enabling the fragility layer, querying a single 1 km cell, and loading a closure scenario.</p>
+  </header>
+
+  <section>
+    <div class="col abstract">
+      <h3>Abstract</h3>
+      <p>Germany's 2024 Hospital Care Improvement Act concentrates specialised care in fewer sites. Standard accessibility measures report whether a population can reach a provider within a time threshold, but they are blind to <em>dependency</em>: two places equally close to care are treated identically even when one has three hospitals in reach and the other has one. This thesis introduces a redundancy-aware service fragility index and a Web GIS platform that applies it to Mecklenburg-Vorpommern, Germany's least densely populated state. A travel-time matrix of 626,381 origin to destination pairs was computed in PostGIS with pgRouting across 10,800 one-kilometre population cells and 35 acute hospitals. The index combines travel time, the gap to the second-nearest provider, threshold breach and elderly exposure under weights derived by pairwise comparison. Surgical and emergency care prove resilient; geriatric care, provided by only five hospitals, does not. Closure simulation shows that impact follows redundancy and network position rather than facility size: removing the state's largest hospital costs no threshold access, while removing one rural keystone displaces 247,592 people.</p>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="col">
+      <h3>Principal result</h3>
+      <h2>Two services look similar on a coverage map and behave nothing alike</h2>
+      <p>Population-weighted coverage against the planning thresholds of 30 minutes for surgery and emergency care and 40 minutes for geriatric care. Drag the handle to compare the same state under two services.</p>
+    </div>
+
+    <div class="cmp" id="cmp">
+      <img id="cmpBase" src="assets/fig-01.jpg" alt="Travel time to the nearest geriatric hospital across Mecklenburg-Vorpommern">
+      <div class="top" id="cmpTop"><img id="cmpOver" src="assets/fig-02.jpg" alt="Travel time to the nearest surgical hospital across Mecklenburg-Vorpommern"></div>
+      <span class="tag l">Surgery</span><span class="tag r">Geriatrics</span>
+      <div class="bar" id="cmpBar"></div><div class="knob" id="cmpKnob">&#8596;</div>
+      <input type="range" id="cmpRange" min="0" max="100" value="50" aria-label="Compare surgery and geriatric accessibility">
+    </div>
+    <figcaption><b>Figure 1.</b> Network travel time to the nearest service-capable hospital, 1 km population grid, computed with pgRouting over the OpenStreetMap road network. Own elaboration. CRS: ETRS89 / UTM zone 32N (EPSG:25832).</figcaption>
+
+    <div class="tblwrap">
+      <table>
+        <caption><b>Table 1.</b> Population-weighted coverage and fragility classification by service. Critical cells are those scoring 0.65 or above on the fragility index.</caption>
+        <thead><tr><th>Service</th><th>Hospitals</th><th>Covered</th><th>Critical cells</th><th>Population in critical cells</th></tr></thead>
+        <tbody>
+          <tr><td><b>Surgery</b></td><td>25</td><td>89.1%</td><td>93</td><td>0.6%</td></tr>
+          <tr><td><b>Emergency</b></td><td>28</td><td>90.1%</td><td>102</td><td>0.7%</td></tr>
+          <tr class="hi"><td><b>Geriatrics</b></td><td>5</td><td>59.5%</td><td>3,479</td><td>28.5%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>The contribution</h3>
+      <h2>Redundancy is the variable coverage cannot see</h2>
+      <p>The map below counts, for every cell, how many service-capable hospitals are reachable inside the threshold. Dark red is zero. The next band is one, meaning a single point of failure. Read the middle panel: for geriatric care, almost the entire state is one or none.</p>
+    </div>
+    <figure class="fig narrow">
+      <img src="assets/fig-03.jpg" alt="Three panel map of service redundancy for surgery, geriatrics and emergency care, showing the number of hospitals reachable within the threshold per cell" loading="lazy">
+      <figcaption><b>Figure 2.</b> Service redundancy, hospitals reachable within the threshold per 1 km cell. Surgery and emergency care show substantial areas with two or more providers in reach. Geriatric care is dominated by cells with one provider or none. Own elaboration. CRS: EPSG:25832.</figcaption>
+    </figure>
+  </section>
+
+  <section id="method">
+    <div class="col">
+      <h3>The index</h3>
+      <h2>Four components, weights derived rather than asserted</h2>
+    </div>
+    <div class="formula"><code>F = 0.35&middot;T + 0.30&middot;G + 0.20&middot;E + 0.15&middot;B</code></div>
+    <ul class="terms col">
+      <li><span class="w">T 0.35</span><span><b>Travel time.</b> Minutes to the nearest service-capable hospital, normalised over 60 and capped.</span></li>
+      <li><span class="w">G 0.30</span><span><b>Dependency gap.</b> Additional minutes to the <em>second</em> nearest hospital, normalised over 30. The novel term. A cell five minutes from one hospital and forty-five from the next is safe on a coverage map and entirely dependent on one facility.</span></li>
+      <li><span class="w">E 0.20</span><span><b>Threshold breach.</b> Binary, 1 where the nearest provider lies beyond the planning standard.</span></li>
+      <li><span class="w">B 0.15</span><span><b>Elderly exposure.</b> Share of residents aged 65 and over, because the same gap does more harm where more older people live.</span></li>
+    </ul>
+    <div class="col">
+      <p style="margin-top:1.3rem">Weights come from an analytic hierarchy process over the four criteria. The principal eigenvector gives 0.337, 0.312, 0.200 and 0.152, rounded to the operational values above. The consistency ratio is <b>0.6%</b> against an accepted limit of 10%, so the judgements are internally coherent and stated in the open rather than asserted. Because the full travel-time matrix is stored rather than only each cell's nearest provider, the second-nearest hospital is recovered by a single window function, and all 32,400 cell-service scores compute in 6.9 seconds.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Closure simulation</h3>
+      <h2>Impact follows network position, not facility size</h2>
+      <p>Each hospital carries an active flag. Clearing it re-derives the nearest open provider for every cell directly from the stored matrix and writes the outcome under a new scenario identifier; nothing is deleted and the baseline remains intact. No re-routing is required, and this is exact rather than approximate: closing a hospital changes no road cost and no shortest path, it removes a set of destinations, so taking the minimum over those that remain is identical to recomputing the whole matrix without it.</p>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <caption><b>Table 2.</b> Four restructuring scenarios. Population losing threshold access, computed from the stored origin to destination matrix.</caption>
+        <thead><tr><th>Scenario</th><th>Service</th><th>Cells losing access</th><th>Population</th></tr></thead>
+        <tbody>
+          <tr><td><b>Keystone removal</b><br><span style="color:var(--mute);font-size:.86rem">KMG Klinikum G&uuml;strow</span></td><td>Geriatrics</td><td>1,075</td><td>247,592</td></tr>
+          <tr class="hi"><td><b>Service withdrawal</b><br><span style="font-size:.86rem">Crivitz and Neubrandenburg</span></td><td>Geriatrics</td><td>1,955</td><td>353,832</td></tr>
+          <tr><td><b>Rural cluster closure</b><br><span style="color:var(--mute);font-size:.86rem">Bad Doberan, Parchim, Ribnitz-Damgarten</span></td><td>Emergency</td><td>638</td><td>60,465</td></tr>
+          <tr class="ok"><td><b>Dominant-hub removal</b><br><span style="font-size:.86rem">University Hospital Rostock, the largest in the state</span></td><td>All</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="carousel" id="scn" tabindex="0" aria-label="Closure scenario maps"><div class="cview"><figure class="cslide on"><span class="ctag">Scenario 1 &middot; geriatric care</span><img src="assets/fig-04.jpg" alt="Change in travel time to geriatric care after the simulated closure of KMG Klinikum Guestrow" loading="lazy"></figure><figure class="cslide"><span class="ctag">Scenario 2 &middot; geriatric care</span><img data-src="assets/fig-05.jpg" alt="Change in travel time to geriatric care after geriatric provision is withdrawn from two hospitals" loading="lazy"></figure><figure class="cslide"><span class="ctag">Scenario 1 &middot; surgical care</span><img data-src="assets/fig-06.jpg" alt="Change in travel time to surgical care after the simulated closure of KMG Klinikum Guestrow" loading="lazy"></figure><figure class="cslide"><span class="ctag">Scenario 3 &middot; surgical care</span><img data-src="assets/fig-07.jpg" alt="Change in travel time to surgical care after the simulated closure of three rural hospitals" loading="lazy"></figure><figure class="cslide"><span class="ctag">Scenario 1 &middot; emergency care</span><img data-src="assets/fig-08.jpg" alt="Change in travel time to emergency care after the simulated closure of KMG Klinikum Guestrow" loading="lazy"></figure><figure class="cslide"><span class="ctag">Scenario 3 &middot; emergency care</span><img data-src="assets/fig-09.jpg" alt="Change in travel time to emergency care after the simulated closure of three rural hospitals" loading="lazy"></figure></div><div class="cbar"><button class="cbtn" data-step="-1" aria-label="Previous scenario">&#9664;</button><button class="cbtn" data-step="1" aria-label="Next scenario">&#9654;</button><div class="cdots" role="tablist"><button class="cdot on" data-go="0" role="tab" aria-selected="true" aria-label="Scenario view 1"></button><button class="cdot" data-go="1" role="tab" aria-selected="false" aria-label="Scenario view 2"></button><button class="cdot" data-go="2" role="tab" aria-selected="false" aria-label="Scenario view 3"></button><button class="cdot" data-go="3" role="tab" aria-selected="false" aria-label="Scenario view 4"></button><button class="cdot" data-go="4" role="tab" aria-selected="false" aria-label="Scenario view 5"></button><button class="cdot" data-go="5" role="tab" aria-selected="false" aria-label="Scenario view 6"></button></div><span class="ccount">1 / 6</span></div><div class="ccap"></div><span class="ccapitem" hidden>KMG Klinikum G&uuml;strow closed. <b>247,592 people</b> across 1,075 cells lose access within 40 minutes. The loss is concentrated: almost all of it falls in one district.</span><span class="ccapitem" hidden>Geriatric provision withdrawn from Crivitz and Neubrandenburg, the two sites kept open. <b>353,832 people</b> across 1,955 cells fall outside the threshold, the largest displacement of any scenario tested.</span><span class="ccapitem" hidden>The same closure, measured against surgical care: <b>4,923 people</b> across 25 cells. One hospital, two services, a difference of fifty times.</span><span class="ccapitem" hidden>Bad Doberan, Parchim and Ribnitz-Damgarten closed together. <b>60,465 people</b> across 638 cells lose surgical access, spread along the rural west and south.</span><span class="ccapitem" hidden>The G&uuml;strow closure again, against emergency care: <b>4,923 people</b>, the same 25 cells as surgery. Where provision is dense, removing one site barely registers.</span><span class="ccapitem" hidden>The three-hospital rural closure against emergency care: <b>60,465 people</b> across 638 cells.</span><p class="hcap"><b>Figure 3.</b> Closure scenarios, change in travel time per 1 km cell. Step through with the arrows, the dots, or the left and right keys. Scenario 4, downgrading the largest hospital in the state, is not shown because it displaces nobody: every cell it served retains an alternative inside the threshold. Own elaboration. CRS: ETRS89 / UTM zone 32N (EPSG:25832).</p></div>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Comparison with prior work</h3>
+      <h2>It agrees with the field standard, then sees what the standard cannot</h2>
+      <p>The established measure in the accessibility literature is the Enhanced Two-Step Floating Catchment Area (E2SFCA) of Luo and Qi, which aggregates supply against distance-decayed demand. A new index has to clear two bars: it must not contradict the established method where that method is reliable, and it must produce something the established method structurally cannot.</p>
+      <p>Both hold. Spearman correlation against E2SFCA is strongly negative for every service, which is the expected direction because high access should mean low fragility. The divergence column is the contribution: cells that E2SFCA ranks as adequately served, at or above median access, while the fragility index flags them fragile or critical. That is single-provider dependency, and supply aggregation cannot express it.</p>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <caption><b>Table 3.</b> Agreement with E2SFCA and the unique dependency signal. E2SFCA implemented per Luo and Qi (2009): beds as supply, population as demand, stepped distance decay of 1.00, 0.68 and 0.22 across three zones. Divergence counts cells E2SFCA ranks adequate yet the fragility index flags fragile or critical.</caption>
+        <thead><tr><th>Service</th><th>Spearman &rho;</th><th>p</th><th>Divergent cells</th><th>Population</th><th>Share</th></tr></thead>
+        <tbody>
+          <tr><td><b>Surgery</b></td><td>&minus;0.736</td><td>&lt;0.001</td><td>377</td><td>37,379</td><td>2.4%</td></tr>
+          <tr class="hi"><td><b>Geriatrics</b></td><td>&minus;0.802</td><td>&lt;0.001</td><td>4,263</td><td>784,006</td><td>50.2%</td></tr>
+          <tr><td><b>Emergency</b></td><td>&minus;0.746</td><td>&lt;0.001</td><td>282</td><td>26,871</td><td>1.7%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <p style="margin-top:1.3rem">For surgery and emergency care the divergence is small, under 3% of residents, which is the correct result: where supply is dense the two measures should agree. For geriatric care it is <b>50.2% of the population</b>. Half the state is adequately served by the standard measure and dependent on a single provider by this one.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>System</h3>
+      <h2>Four layers, one source of truth</h2>
+      <p>Analysis executes inside the database rather than in an external script, so the layer that serves the browser reads the same rows the analysis wrote.</p>
+    </div>
+    <figure class="fig narrow">
+      <img src="assets/fig-10.jpg" alt="System architecture diagram showing the data layer, analytical layer, service layer and presentation layer of the platform" loading="lazy">
+      <figcaption><b>Figure 5.</b> Platform architecture. PostgreSQL with PostGIS and pgRouting holds the data and executes the analysis; FastAPI serves analytical results; GeoServer publishes the spatial layers over OGC services; React and Leaflet render the client. Own elaboration.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Evaluation</h3>
+      <h2>Three independent checks</h2>
+    </div>
+    <div class="notes">
+      <div><h3>Routing</h3><p>Validated against the Open Source Routing Machine on 100 matched origin to destination pairs. Pearson correlation <b>0.916</b>, mean absolute error 9.0 minutes, root mean square error 11.2 minutes. Rural times run optimistic by 6.5 minutes, so the reported deficit is conservative.</p></div>
+      <div><h3>Analysis</h3><p>The SQL implementation was independently reimplemented in Python with GeoPandas and compared district by district: <b>100% class agreement</b>, correlation 1.0, a single residual of 0.0001. Two implementations agreeing is evidence; one running is not.</p></div>
+      <div><h3>Robustness</h3><p>Thresholds varied by 5 minutes, network speeds by 20%, and the index re-run under equal, travel-heavy, redundancy-heavy and equity weight sets. Between <b>85.7% and 91.8%</b> of cells retain their class. The modifiable areal unit problem is tested at 1, 2, 5 and 10 kilometres and at district level.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Synthesis</h3>
+      <h2>Where a planner would act first</h2>
+    </div>
+    <figure class="fig">
+      <img src="assets/fig-11.jpg" alt="Synthesis decision map combining geriatric fragility with the keystone hospitals identified by closure simulation" loading="lazy">
+      <figcaption><b>Figure 4.</b> Geriatric fragility combined with the hospitals whose closure displaces the largest populations. A keystone is defined operationally, as the facility serving the largest population as unique nearest provider, rather than chosen by judgement. Own elaboration. CRS: EPSG:25832.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Implementation</h3>
+      <h2>Open data in, open standards out</h2>
+    </div>
+    <div class="notes">
+      <div><h3>Data</h3><p>Hospital register 2022, geocoded by hand; Federal Joint Committee quality reports 2023 for service profiles; OpenStreetMap roads via Geofabrik 2024; the 2022 census one-kilometre population grid; federal administrative boundaries. Three different native coordinate systems, all harmonised to a metric one.</p></div>
+      <div><h3>Graph</h3><p>35,062 road segments and 11,156 kilometres become 34,114 junctions. Connectivity was tested rather than assumed: of 212 components the largest holds 31,335 junctions, and zero hospitals and zero populated cells fall outside it.</p></div>
+      <div><h3>Analysis</h3><p>PostgreSQL 17 with PostGIS and pgRouting. Common table expressions and window functions over the stored matrix, executed inside the database rather than in an external script, so the platform serves the same rows the analysis produced.</p></div>
+      <div><h3>Delivery</h3><p>FastAPI for analytical endpoints, GeoServer publishing 12 layers as Web Map Service and Web Feature Service with portable styling, React and Leaflet in the browser. Every endpoint responds in under 0.4 seconds. Reproducible from a single compose file.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Limitations</h3>
+      <h2>What the results do not support</h2>
+    </div>
+    <div class="notes">
+      <div><h3>Elderly exposure</h3><p>The share of residents aged 65 and over is a district rate applied to every cell within that district, not a measured count. Within a district all cells carry the same value, so genuine internal variation is invisible. It is the softest input in the chain and it carries the lowest weight.</p></div>
+      <div><h3>Routing</h3><p>Travel is modelled as undirected, so one-way restrictions are not represented. Motorway ramps are filtered out, which places the A19 and A20 outside the main connected component. Both choices slow modelled journeys, so the reported access deficit is conservative rather than optimistic.</p></div>
+      <div><h3>Evaluation design</h3><p>The weights were elicited from one analyst and the interface was assessed by heuristic inspection rather than with users. Both evaluations are single-judge, and the judge is the author. Establishing decision support empirically would require a task-based study with planning practitioners.</p></div>
+      <div><h3>Temporal scope</h3><p>The inputs are a static snapshot assembled from mixed vintages between 2022 and 2024. The analysis describes one moment and supports no claim about trends. Supply is also measured as beds, which for geriatric care overstates capacity where a hospital's beds are not all geriatric.</p></div>
+    </div>
+  </section>
+
+  <section id="resources">
+    <div class="col">
+      <h3>Resources</h3>
+      <h2>Platform, code and citation</h2>
+      <p>The platform runs on a small cloud instance and may occasionally be offline. The analytical database, the SQL, the API and the front end are included in the digital appendix.</p>
+    </div>
+    <div class="res" style="margin-top:1.3rem">
+      <a href="https://34-107-87-228.sslip.io" target="_blank" rel="noopener"><i>&rarr;</i>Live platform</a>
+      <a href="https://github.com/Yasir-Hameed-HCU" target="_blank" rel="noopener"><i>&rarr;</i>GitHub</a>
+      <a href="https://www.linkedin.com/in/yasir-hameed-98aa05245" target="_blank" rel="noopener"><i>&rarr;</i>LinkedIn</a>
+    </div>
+<pre>@mastersthesis{Hameed2026,
+  author      = {Hameed, Yasir},
+  title       = {A Web {GIS} Decision-Support Platform for Healthcare
+                 Accessibility and Service Fragility Analysis under Hospital
+                 Restructuring in Mecklenburg-Vorpommern, Germany},
+  school      = {HafenCity Universit\"at Hamburg},
+  year        = {2026},
+  type        = {M.Sc. thesis},
+  address     = {Hamburg, Germany}
+}</pre>
+  </section>
+
+  <footer>
+    <div class="col">
+      <p><b style="color:var(--ink)">Yasir Hameed</b><br>
+      <span style="color:var(--mute)">Geoinformatics and hydrography, Hamburg</span></p>
+      <p class="sel">yasir.hameed382@gmail.com</p>
+      <p class="foot-note">Data sources: Krankenhausplan Mecklenburg-Vorpommern 2022; Gemeinsamer Bundesausschuss Qualit&auml;tsberichte 2023; OpenStreetMap contributors via Geofabrik 2024; Statistisches Bundesamt, Zensus 2022; Bundesamt f&uuml;r Kartographie und Geod&auml;sie, VG250 2023. All figures are own elaboration from the thesis. Outputs are planning indicators and are not clinical or closure decisions.</p>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var r = document.getElementById('cmpRange'),
+      top = document.getElementById('cmpTop'),
+      bar = document.getElementById('cmpBar'),
+      knob = document.getElementById('cmpKnob'),
+      base = document.getElementById('cmpBase'),
+      over = document.getElementById('cmpOver'),
+      box = document.getElementById('cmp');
+  if(!r) return;
+  function sizeOverlay(){
+    if(!base.clientWidth) return;
+    over.style.width = base.clientWidth + 'px';
+    over.style.height = base.clientHeight + 'px';
+  }
+  function set(v){
+    top.style.width = v + '%';
+    bar.style.left = v + '%';
+    knob.style.left = v + '%';
+  }
+  r.addEventListener('input', function(){ set(r.value); });
+  window.addEventListener('resize', sizeOverlay);
+  if(base.complete) sizeOverlay(); else base.addEventListener('load', sizeOverlay);
+  over.addEventListener('load', sizeOverlay);
+  set(r.value);
+})();
+
+(function(){
+  var root = document.getElementById('scn');
+  if(!root) return;
+  var slides = [].slice.call(root.querySelectorAll('.cslide')),
+      dots   = [].slice.call(root.querySelectorAll('.cdot')),
+      caps   = [].slice.call(root.querySelectorAll('.ccapitem')),
+      cap    = root.querySelector('.ccap'),
+      count  = root.querySelector('.ccount'),
+      i = 0;
+  function show(n){
+    i = (n + slides.length) % slides.length;
+    slides.forEach(function(s,k){ s.classList.toggle('on', k===i); });
+    dots.forEach(function(d,k){
+      d.classList.toggle('on', k===i);
+      d.setAttribute('aria-selected', k===i ? 'true' : 'false');
+    });
+    cap.innerHTML = caps[i].innerHTML;
+    count.textContent = (i+1) + ' / ' + slides.length;
+    var img = slides[i].querySelector('img');
+    if(img && img.dataset.src){ img.src = img.dataset.src; delete img.dataset.src; }
+  }
+  root.addEventListener('click', function(e){
+    var b = e.target.closest('[data-step]');
+    if(b){ show(i + parseInt(b.getAttribute('data-step'),10)); return; }
+    var d = e.target.closest('[data-go]');
+    if(d){ show(parseInt(d.getAttribute('data-go'),10)); }
+  });
+  root.addEventListener('keydown', function(e){
+    if(e.key==='ArrowLeft'){ show(i-1); } else if(e.key==='ArrowRight'){ show(i+1); }
+  });
+  show(0);
+})();
+</script>
+
+</body></html>
