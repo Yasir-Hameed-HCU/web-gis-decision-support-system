@@ -1,0 +1,8 @@
+# FastAPI backend dependencies
+
+fastapi==0.115.6        # ASGI web framework
+uvicorn[standard]==0.34.0   # ASGI server (includes websockets + httptools)
+asyncpg==0.30.0         # high-performance async PostgreSQL driver
+pydantic==2.10.4        # request/response validation
+pydantic-settings==2.7.1    # 12-factor env-var configuration
+python-dotenv==1.0.1    # load .env during development

@@ -1,0 +1,59 @@
+# Web GIS Decision-Support Platform — full-stack deployment
+# PostGIS + GeoServer + FastAPI + React frontend, one command: `docker compose up`
+# Secrets via .env (DB_PASSWORD, RO_PASSWORD, GS_PASSWORD). Not committed.
+
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    container_name: hmv_db
+    environment:
+      POSTGRES_DB: healthcare_accessibility
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro   # schema + data restore + gis_readonly role
+    ports: ["127.0.0.1:5432:5432"]   # loopback only; other services reach it as `db`
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d healthcare_accessibility"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.28.0
+    container_name: hmv_geoserver
+    environment:
+      GEOSERVER_ADMIN_USER: admin
+      GEOSERVER_ADMIN_PASSWORD: ${GS_PASSWORD}
+      SKIP_DEMO_DATA: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./geoserver/data_dir:/opt/geoserver_data   # shipped config: workspace healthcare_mv, store, 12 layers, 8 SLDs
+    ports: ["8080:8080"]
+
+  backend:
+    build: ./backend
+    container_name: hmv_backend
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: healthcare_accessibility
+      DB_USER: gis_readonly                # least-privilege role
+      DB_PASSWORD: ${RO_PASSWORD}
+      CORS_ORIGINS: "http://localhost,http://localhost:5173"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["8000:8000"]
+
+  frontend:
+    build: ./frontend
+    container_name: hmv_frontend
+    depends_on: [backend, geoserver]
+    ports: ["80:80"]                        # nginx serves built SPA + proxies /api, /geoserver
+
+volumes:
+  pgdata:

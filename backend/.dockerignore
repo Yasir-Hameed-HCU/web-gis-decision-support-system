@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+backend_run.log
+ws_test_client.html
+README.md

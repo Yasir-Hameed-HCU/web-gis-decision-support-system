@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- Minimal WebSocket progress demo client.
+     Open in a browser while the API runs on port 8000, click Connect. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WebSocket Progress — Healthcare Accessibility API</title>
+<style>
+  body{font-family:"Segoe UI",Arial,sans-serif;max-width:640px;margin:40px auto;color:#222;}
+  h1{font-size:20px;color:#1f3a5f;}
+  button{background:#2e6da4;color:#fff;border:none;padding:10px 18px;border-radius:6px;font-size:14px;cursor:pointer;}
+  #bar{height:22px;background:#eef4fa;border-radius:6px;overflow:hidden;margin:18px 0;}
+  #fill{height:100%;width:0;background:#27865a;transition:width .3s;}
+  #log{background:#1f2733;color:#e6edf3;padding:14px;border-radius:8px;font-family:Consolas,monospace;font-size:12.5px;white-space:pre-wrap;min-height:140px;}
+</style>
+</head>
+<body>
+  <h1>WebSocket progress — /api/v1/ws/progress</h1>
+  <button onclick="connect()">Connect</button>
+  <div id="bar"><div id="fill"></div></div>
+  <div id="log">Click Connect…</div>
+
+<script>
+function connect() {
+  const log = document.getElementById('log');
+  const fill = document.getElementById('fill');
+  log.textContent = '';
+  const ws = new WebSocket('ws://localhost:8000/api/v1/ws/progress');
+  ws.onopen    = () => log.textContent += 'connected\n';
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    log.textContent += JSON.stringify(m) + '\n';
+    if (m.pct) fill.style.width = m.pct + '%';
+    if (m.stage === 'complete') log.textContent += '\nDONE: ' + JSON.stringify(m.summary) + '\n';
+  };
+  ws.onclose   = () => log.textContent += 'closed\n';
+  ws.onerror   = () => log.textContent += 'ERROR — is the API running on port 8000?\n';
+}
+</script>
+</body>
+</html>
