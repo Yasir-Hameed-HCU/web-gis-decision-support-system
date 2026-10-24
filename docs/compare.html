@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Redundancy, not coverage</title>
+<meta name="author" content="Yasir Hameed">
+<meta name="description" content="Six paired maps of hospital accessibility in Mecklenburg-Vorpommern. Drag each slider to compare surgical and geriatric care, and to see what a hospital closure actually costs.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Yasir Hameed">
+<meta property="og:title" content="Redundancy, not coverage: six paired maps">
+<meta property="og:description" content="Closing the largest hospital in Mecklenburg-Vorpommern costs nobody their threshold access. Closing three smaller rural hospitals costs 60,465 people theirs. Drag the sliders.">
+<meta property="og:url" content="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/compare.html">
+<meta property="og:image" content="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/compare.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5f7f9; --card:#ffffff; --ink:#132c46; --body:#33465a; --mute:#6a7f93;
+  --line:#dce3ea; --rule:#c6d2dd; --teal:#0f7682; --critical:#bc2c22;
+  --disp:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0c1620; --card:#14202c; --ink:#e9eff5; --body:#bfccd9; --mute:#8699aa;
+    --line:#22323f; --rule:#2c3f4f; --teal:#49bcc8; --critical:#e8655a;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0c1620; --card:#14202c; --ink:#e9eff5; --body:#bfccd9; --mute:#8699aa;
+  --line:#22323f; --rule:#2c3f4f; --teal:#49bcc8; --critical:#e8655a;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--body);
+  font-family:var(--sans); font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:0 16px}
+
+header.top{padding:52px 0 26px; border-bottom:1px solid var(--line)}
+.eyebrow{
+  font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--teal); font-weight:600; margin:0 0 14px
+}
+h1{
+  font-family:var(--disp); font-weight:700; color:var(--ink);
+  font-size:clamp(30px,5.4vw,46px); line-height:1.14; margin:0 0 16px; letter-spacing:-.012em
+}
+.lede{margin:0; max-width:62ch; font-size:clamp(16px,2.3vw,18.5px)}
+.lede strong{color:var(--ink); font-weight:600}
+
+.deck{overflow:hidden; margin:30px 0 0; transition:height .42s cubic-bezier(.4,.05,.2,1)}
+.track{display:flex; align-items:flex-start; transition:transform .42s cubic-bezier(.4,.05,.2,1)}
+.slide{flex:0 0 100%; min-width:0; padding:4px 0 2px}
+
+.kicker{
+  font-family:var(--sans); font-size:12px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--mute); margin:0 0 9px; font-weight:600
+}
+h2{
+  font-family:var(--disp); font-weight:600; color:var(--ink);
+  font-size:clamp(21px,3.5vw,29px); line-height:1.2; margin:0 0 10px; letter-spacing:-.008em
+}
+.sub{margin:0 0 18px; color:var(--mute); font-size:15.5px; max-width:64ch}
+
+.cmp{
+  --pos:50%;
+  position:relative; margin:0; border-radius:10px; overflow:hidden;
+  background:#fff; border:1px solid var(--line); line-height:0;
+  box-shadow:0 1px 3px rgba(19,44,70,.07);
+  touch-action:pan-y;
+}
+.cmp img{display:block; width:100%; height:auto; user-select:none; -webkit-user-drag:none}
+.cmp .over{position:absolute; inset:0; clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.cmp .over img{position:absolute; inset:0; width:100%; height:100%}
+
+.bar{
+  position:absolute; top:0; bottom:0; left:var(--pos); width:2px;
+  background:var(--ink); transform:translateX(-1px); pointer-events:none; z-index:4;
+  box-shadow:0 0 0 1px rgba(255,255,255,.65)
+}
+.grip{
+  position:absolute; top:50%; left:var(--pos); width:44px; height:44px; z-index:5;
+  margin:-22px 0 0 -22px; border-radius:50%; background:var(--card);
+  border:2px solid var(--ink); pointer-events:none;
+  display:grid; place-items:center;
+  box-shadow:0 2px 10px rgba(19,44,70,.28)
+}
+.grip::before{
+  content:"\2039 \203A"; font-family:var(--sans); font-size:19px; font-weight:600;
+  color:var(--ink); letter-spacing:1px; line-height:1
+}
+.tag{
+  position:absolute; top:12px; z-index:3; pointer-events:none;
+  font-family:var(--sans); font-size:12.5px; font-weight:600; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; background:rgba(19,44,70,.84);
+  padding:5px 11px; border-radius:4px; line-height:1.35; max-width:44%;
+}
+.tag.l{left:12px}
+.tag.r{right:12px; background:rgba(188,44,34,.86)}
+
+.cmp input[type=range]{
+  position:absolute; inset:0; width:100%; height:100%; margin:0; z-index:6;
+  opacity:0; cursor:ew-resize; -webkit-appearance:none; appearance:none; background:none
+}
+.cmp input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:46px; height:400px}
+.cmp input[type=range]::-moz-range-thumb{width:46px; height:400px; border:0; opacity:0}
+.cmp input[type=range]:focus-visible{outline:none}
+.cmp:focus-within{outline:3px solid var(--teal); outline-offset:3px}
+
+.key{display:flex; flex-wrap:wrap; gap:7px 15px; align-items:center; margin:13px 0 0}
+.key .kl{
+  width:100%; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--mute); font-weight:600; margin:0 0 1px
+}
+.key .i{display:inline-flex; align-items:center; gap:7px; font-size:13.5px; color:var(--body); line-height:1.4}
+.key .i b{width:15px; height:15px; border-radius:3px; display:block; flex:0 0 15px; border:1px solid rgba(19,44,70,.25)}
+
+.cap{margin:16px 0 0; font-size:16px; max-width:70ch; color:var(--body)}
+.cap b{color:var(--ink); font-weight:600}
+
+nav.pager{
+  display:flex; align-items:center; gap:14px; justify-content:center;
+  margin:26px 0 0; padding:18px 0 0; border-top:1px solid var(--line); flex-wrap:wrap
+}
+.pbtn{
+  font-family:var(--sans); font-size:14.5px; font-weight:600; color:var(--ink);
+  background:var(--card); border:1px solid var(--rule); border-radius:7px;
+  padding:9px 17px; cursor:pointer; line-height:1.3
+}
+.pbtn:hover:not(:disabled){border-color:var(--ink)}
+.pbtn:disabled{opacity:.36; cursor:default}
+.dots{display:flex; gap:9px}
+.dot{
+  width:9px; height:9px; border-radius:50%; background:var(--rule);
+  border:0; padding:0; cursor:pointer
+}
+.dot[aria-current="true"]{background:var(--ink); transform:scale(1.32)}
+
+.hint{text-align:center; color:var(--mute); font-size:13.5px; margin:12px 0 0}
+
+footer{margin:44px 0 0; padding:26px 0 56px; border-top:1px solid var(--line)}
+.links{display:flex; flex-wrap:wrap; gap:10px; margin:0 0 22px}
+.links a{
+  font-size:14.5px; font-weight:600; color:var(--ink); text-decoration:none;
+  border:1px solid var(--rule); border-radius:7px; padding:9px 15px
+}
+.links a:hover{border-color:var(--ink)}
+.src{font-size:12.8px; line-height:1.72; color:var(--mute); margin:0; max-width:80ch}
+.src b{color:var(--body); font-weight:600}
+
+@media (max-width:640px){
+  body{font-size:16px}
+  header.top{padding:34px 0 20px}
+  .tag{font-size:11px; padding:4px 8px; max-width:46%}
+  .grip{width:38px; height:38px; margin:-19px 0 0 -19px}
+  .cap{font-size:15.5px}
+}
+@media (prefers-reduced-motion:reduce){ .track,.deck{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Mecklenburg-Vorpommern, Germany</p>
+  <h1>Redundancy, not coverage</h1>
+  <p class="lede">Germany is concentrating specialist hospital care. A coverage statistic cannot say who that hurts, because it asks how much care sits inside a region, never whether a population has <strong>one hospital to fall back on or three</strong>. These six pairs ask. Every populated 1 km cell, 1,561,160 residents, routed to every hospital over the road network. <strong>Drag any slider.</strong></p>
+</header>
+
+<div class="deck">
+<div class="track" id="track">
+
+  <section class="slide" aria-roledescription="slide" aria-label="1 of 6">
+    <p class="kicker">01 / 06 &middot; Redundancy</p>
+    <h2>How many hospitals can you actually reach?</h2>
+    <p class="sub">Number of service capable hospitals reachable inside the policy threshold, per 1 km cell.</p>
+    <figure class="cmp" style="aspect-ratio:1500/666">
+      <img src="assets/compare/redundancy-geriatric.jpg" width="1500" height="666" alt="Map of Mecklenburg-Vorpommern showing how many geriatric capable hospitals each 1 km cell can reach within 40 minutes. Most of the state is dark red, meaning one hospital or none.">
+      <div class="over"><img src="assets/compare/redundancy-surgery.jpg" width="1500" height="666" alt="The same map for surgery capable hospitals within 30 minutes, showing green and orange areas where several hospitals are reachable."></div>
+      <span class="bar"></span><span class="grip"></span>
+      <span class="tag l">Surgical care</span><span class="tag r">Geriatric care</span>
+      <input type="range" min="0" max="100" value="50" step="0.1" aria-label="Compare surgical and geriatric redundancy">
+    </figure>
+        <div class="key"><span class="kl">Hospitals reachable inside the threshold</span>
+      <span class="i"><b style="background:#b30000"></b>0, no access</span>
+      <span class="i"><b style="background:#e34a33"></b>1, single hospital</span>
+      <span class="i"><b style="background:#fdbb84"></b>2</span>
+      <span class="i"><b style="background:#a1d99b"></b>3 to 4</span>
+      <span class="i"><b style="background:#238443"></b>5 or more</span></div>
+    <p class="cap">Dark red is a cell that can reach <b>one hospital, or none</b>. Of the population that counts as covered for surgery, <b>26.2 %</b> depend on a single hospital. For geriatric care it is <b>90.6 %</b>. A coverage statistic reports both of them as covered.</p>
+  </section>
+
+  <section class="slide" aria-roledescription="slide" aria-label="2 of 6">
+    <p class="kicker">02 / 06 &middot; Fragility</p>
+    <h2>What that dependency costs</h2>
+    <p class="sub">Per cell fragility class, combining travel time, the penalty to the second nearest provider, threshold breach, and the share of residents aged 65 and over.</p>
+    <figure class="cmp" style="aspect-ratio:1500/697">
+      <img src="assets/compare/fragility-geriatric.jpg" loading="lazy" width="1500" height="697" alt="Geriatric care fragility map, with large red and orange areas across the west and east of the state.">
+      <div class="over"><img src="assets/compare/fragility-surgery.jpg" loading="lazy" width="1500" height="697" alt="Surgical care fragility map, predominantly green, meaning stable."></div>
+      <span class="bar"></span><span class="grip"></span>
+      <span class="tag l">Surgical care</span><span class="tag r">Geriatric care</span>
+      <input type="range" min="0" max="100" value="50" step="0.1" aria-label="Compare surgical and geriatric fragility">
+    </figure>
+        <div class="key"><span class="kl">Fragility class</span>
+      <span class="i"><b style="background:#1a9850"></b>Stable</span>
+      <span class="i"><b style="background:#fdae61"></b>Fragile</span>
+      <span class="i"><b style="background:#d73027"></b>Critical</span></div>
+    <p class="cap">Green is stable, orange fragile, red critical. The same state, the same roads, the same population. Only the service changes.</p>
+  </section>
+
+  <section class="slide" aria-roledescription="slide" aria-label="3 of 6">
+    <p class="kicker">03 / 06 &middot; Scenario 1</p>
+    <h2>One closure, two very different outcomes</h2>
+    <p class="sub">KMG Klinikum G&uuml;strow closes. Change in travel time to the nearest remaining provider, per 1 km cell.</p>
+    <figure class="cmp" style="aspect-ratio:1500/666">
+      <img src="assets/compare/s1-geriatric.jpg" loading="lazy" width="1500" height="666" alt="Change in geriatric travel time after the closure of KMG Klinikum Guestrow: a large red area spreading across the centre of the state.">
+      <div class="over"><img src="assets/compare/s1-surgery.jpg" loading="lazy" width="1500" height="666" alt="Change in surgical travel time after the same closure: almost the entire state unchanged."></div>
+      <span class="bar"></span><span class="grip"></span>
+      <span class="tag l">Surgical care</span><span class="tag r">Geriatric care</span>
+      <input type="range" min="0" max="100" value="50" step="0.1" aria-label="Compare the surgical and geriatric impact of Scenario 1">
+    </figure>
+        <div class="key"><span class="kl">Added travel time to the nearest remaining provider</span>
+      <span class="i"><b style="background:#e0e0e0"></b>No change</span>
+      <span class="i"><b style="background:#fddbc7"></b>up to 5 min</span>
+      <span class="i"><b style="background:#f4a582"></b>5 to 15</span>
+      <span class="i"><b style="background:#d6604d"></b>15 to 30</span>
+      <span class="i"><b style="background:#b2182b"></b>30 to 45</span>
+      <span class="i"><b style="background:#67001f"></b>45 and above</span></div>
+    <p class="cap">The same hospital shuts in both maps. <b>4,923</b> residents fall outside the surgical threshold. <b>247,592</b> fall outside the geriatric one. One service absorbs the loss. The other does not.</p>
+  </section>
+
+  <section class="slide" aria-roledescription="slide" aria-label="4 of 6">
+    <p class="kicker">04 / 06 &middot; Scenario 1 against Scenario 2</p>
+    <h2>Closing a hospital is not the only way to lose a service</h2>
+    <p class="sub">Geriatric care in both maps. On the left a whole hospital shuts. On the right two hospitals stay open but stop offering the service.</p>
+    <figure class="cmp" style="aspect-ratio:1500/666">
+      <img src="assets/compare/s2-geriatric.jpg" loading="lazy" width="1500" height="666" alt="Change in geriatric travel time after the geriatric service is withdrawn at Crivitz and Neubrandenburg: very large red areas in the west and east.">
+      <div class="over"><img src="assets/compare/s1-geriatric.jpg" loading="lazy" width="1500" height="666" alt="Change in geriatric travel time after the closure of KMG Klinikum Guestrow, concentrated in the centre."></div>
+      <span class="bar"></span><span class="grip"></span>
+      <span class="tag l">Hospital closes</span><span class="tag r">Service withdrawn</span>
+      <input type="range" min="0" max="100" value="50" step="0.1" aria-label="Compare Scenario 1 and Scenario 2 for geriatric care">
+    </figure>
+        <div class="key"><span class="kl">Added travel time to the nearest remaining provider</span>
+      <span class="i"><b style="background:#e0e0e0"></b>No change</span>
+      <span class="i"><b style="background:#fddbc7"></b>up to 5 min</span>
+      <span class="i"><b style="background:#f4a582"></b>5 to 15</span>
+      <span class="i"><b style="background:#d6604d"></b>15 to 30</span>
+      <span class="i"><b style="background:#b2182b"></b>30 to 45</span>
+      <span class="i"><b style="background:#67001f"></b>45 and above</span></div>
+    <p class="cap">Closing G&uuml;strow outright costs <b>247,592</b> residents their geriatric threshold access. Withdrawing only the geriatric department at Crivitz and Neubrandenburg, with <b>both hospitals still open and still treating patients</b>, costs <b>353,832</b>. The larger loss comes from the smaller intervention.</p>
+  </section>
+
+  <section class="slide" aria-roledescription="slide" aria-label="5 of 6">
+    <p class="kicker">05 / 06 &middot; Scenario 1 against Scenario 3</p>
+    <h2>Size is not what decides the damage</h2>
+    <p class="sub">Surgical care in both maps. On the left one keystone hospital. On the right three smaller rural hospitals.</p>
+    <figure class="cmp" style="aspect-ratio:1500/666">
+      <img src="assets/compare/s3-surgery.jpg" loading="lazy" width="1500" height="666" alt="Change in surgical travel time after Bad Doberan, Parchim and Ribnitz close: several affected clusters along the coast and in the south west.">
+      <div class="over"><img src="assets/compare/s1-surgery.jpg" loading="lazy" width="1500" height="666" alt="Change in surgical travel time after KMG Klinikum Guestrow closes: almost no change anywhere."></div>
+      <span class="bar"></span><span class="grip"></span>
+      <span class="tag l">One large hospital</span><span class="tag r">Three rural hospitals</span>
+      <input type="range" min="0" max="100" value="50" step="0.1" aria-label="Compare Scenario 1 and Scenario 3 for surgical care">
+    </figure>
+        <div class="key"><span class="kl">Added travel time to the nearest remaining provider</span>
+      <span class="i"><b style="background:#e0e0e0"></b>No change</span>
+      <span class="i"><b style="background:#fddbc7"></b>up to 5 min</span>
+      <span class="i"><b style="background:#f4a582"></b>5 to 15</span>
+      <span class="i"><b style="background:#d6604d"></b>15 to 30</span>
+      <span class="i"><b style="background:#b2182b"></b>30 to 45</span>
+      <span class="i"><b style="background:#67001f"></b>45 and above</span></div>
+    <p class="cap">Closing KMG Klinikum G&uuml;strow puts <b>4,923</b> residents outside the surgical threshold. Closing Bad Doberan, Parchim and Ribnitz, all of them smaller, puts <b>60,465</b> outside it: twelve times the loss. And closing the largest hospital in the state, the University Hospital Rostock, costs <b>nobody</b> their threshold access at all.</p>
+  </section>
+
+  <section class="slide" aria-roledescription="slide" aria-label="6 of 6">
+    <p class="kicker">06 / 06 &middot; The numbers</p>
+    <h2>The same finding, counted</h2>
+    <p class="sub">Population weighted share of residents inside the threshold, by district. Same districts, same axis, same order in both panels.</p>
+    <figure class="cmp" style="aspect-ratio:1500/760">
+      <img src="assets/compare/chart-geriatric.png" loading="lazy" width="1500" height="760" alt="Bar chart of geriatric care coverage by district, ranging from 98.1 percent in Schwerin down to 2.7 percent in Nordwestmecklenburg.">
+      <div class="over"><img src="assets/compare/chart-surgery.png" loading="lazy" width="1500" height="760" alt="Bar chart of surgical care coverage by district, every district between 78 and 99 percent."></div>
+      <span class="bar"></span><span class="grip"></span>
+      <span class="tag l">Surgical care</span><span class="tag r">Geriatric care</span>
+      <input type="range" min="0" max="100" value="50" step="0.1" aria-label="Compare surgical and geriatric coverage by district">
+    </figure>
+    <p class="cap">Surgical coverage never drops below <b>78.4 %</b> in any district. Geriatric coverage falls to <b>44.1 %</b> in Vorpommern-Greifswald and <b>2.7 %</b> in Nordwestmecklenburg. Statewide: <b>89.1 %</b> surgical, <b>59.5 %</b> geriatric.</p>
+  </section>
+
+</div>
+</div>
+
+<nav class="pager">
+  <button class="pbtn" id="prev" type="button">Previous</button>
+  <div class="dots" id="dots" role="tablist" aria-label="Choose a pair"></div>
+  <button class="pbtn" id="next" type="button">Next</button>
+</nav>
+<p class="hint">Drag the circle to compare. Arrow keys move the slider, Page Up and Page Down change the pair.</p>
+
+<footer>
+  <div class="links">
+    <a href="./">Project page</a>
+    <a href="https://34-107-87-228.sslip.io">Live platform</a>
+    <a href="https://github.com/Yasir-Hameed-HCU/web-gis-decision-support-system">Source code</a>
+  </div>
+  <p class="src"><b>Maps and analysis</b> from the M.Sc. thesis in Geodesy and Geoinformatics, HafenCity University Hamburg, 2026. <b>Hospitals, departments and planned beds:</b> Krankenhausplan Mecklenburg-Vorpommern, Stand Dezember 2022, geocoded by the author. <b>Service profiles:</b> Gemeinsamer Bundesausschuss, Qualit&auml;tsberichte der Krankenh&auml;user. <b>Road network:</b> OpenStreetMap via Geofabrik 2024. <b>Population:</b> Zensus 2022, 1 km grid. <b>Boundaries:</b> Bundesamt f&uuml;r Kartographie und Geod&auml;sie, VG250 2023. <b>Routing:</b> pgRouting, Dijkstra. <b>CRS:</b> ETRS89 / UTM 32N, EPSG:25832. Thresholds: 30 minutes for surgical and emergency care, 40 minutes for geriatric care.</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  document.querySelectorAll(".cmp").forEach(function(fig){
+    var input = fig.querySelector("input[type=range]");
+    function paint(){ fig.style.setProperty("--pos", input.value + "%"); }
+    input.addEventListener("input", paint);
+    paint();
+  });
+
+  var deck   = document.querySelector(".deck");
+  var track  = document.getElementById("track");
+  var slides = Array.prototype.slice.call(track.children);
+  var dots   = document.getElementById("dots");
+  var prev   = document.getElementById("prev");
+  var next   = document.getElementById("next");
+  var at     = 0;
+
+  slides.forEach(function(_, i){
+    var b = document.createElement("button");
+    b.className = "dot";
+    b.type = "button";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-label", "Pair " + (i + 1));
+    b.addEventListener("click", function(){ go(i); });
+    dots.appendChild(b);
+  });
+
+  function go(i){
+    at = Math.max(0, Math.min(slides.length - 1, i));
+    track.style.transform = "translateX(" + (-at * 100) + "%)";
+    Array.prototype.forEach.call(dots.children, function(d, j){
+      d.setAttribute("aria-current", j === at ? "true" : "false");
+    });
+    slides.forEach(function(s, j){
+      if (j === at) { s.removeAttribute("inert"); s.removeAttribute("aria-hidden"); }
+      else          { s.setAttribute("inert", ""); s.setAttribute("aria-hidden", "true"); }
+    });
+    prev.disabled = (at === 0);
+    next.disabled = (at === slides.length - 1);
+    fit();
+  }
+
+  // the deck is only as tall as the pair on show, so a short pair leaves no gap
+  function fit(){
+    deck.style.height = slides[at].offsetHeight + "px";
+  }
+  window.addEventListener("resize", fit);
+  window.addEventListener("load", fit);
+  document.querySelectorAll(".cmp img").forEach(function(img){
+    if (!img.complete) { img.addEventListener("load", fit, { once: true }); }
+  });
+
+  prev.addEventListener("click", function(){ go(at - 1); });
+  next.addEventListener("click", function(){ go(at + 1); });
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "PageDown") { e.preventDefault(); go(at + 1); }
+    if (e.key === "PageUp")   { e.preventDefault(); go(at - 1); }
+  });
+
+  go(0);
+})();
+</script>
+</body>
+</html>
