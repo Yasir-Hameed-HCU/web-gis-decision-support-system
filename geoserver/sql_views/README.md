@@ -18,8 +18,8 @@ In the GeoServer web interface, add a new layer to the PostGIS store, choose
 column as the file's comment states, set the SRS to EPSG:25832, then compute the
 bounding boxes from the data.
 
-Styling is applied with the Styled Layer Descriptor files alongside, so a layer
-renders identically wherever it is published.
+Styling lives beside this directory in `../styles/`, one Styled Layer
+Descriptor per layer, so a layer renders identically wherever it is published.
 
 The store should connect as the least-privilege role created by
 `db/init/01_create_readonly_role.sql`, not as a superuser.
