@@ -2,271 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>How the platform is built</title>
-<meta name="author" content="Yasir Hameed">
-<meta name="description" content="The engineering behind a Web GIS decision support platform: PostGIS and pgRouting, a read only FastAPI, GeoServer publishing WMS and WFS, a React and Leaflet client, all from one compose file.">
-<meta property="og:type" content="article">
-<meta property="og:site_name" content="Yasir Hameed">
-<meta property="og:title" content="How the platform is built">
-<meta property="og:description" content="Spatial database to browser map: PostgreSQL 17 with PostGIS and pgRouting, FastAPI over a read only role, GeoServer publishing twelve layers as WMS and WFS, React and Leaflet, Docker.">
-<meta property="og:url" content="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/build.html">
-<meta property="og:image" content="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/preview.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="627">
-<meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/build.html">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&amp;display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Web GIS Decision Support Platform</title>
+<link rel="canonical" href="https://yasir-hameed-hcu.github.io/web-gis-decision-support-system/#platform">
+<meta http-equiv="refresh" content="0; url=./#platform">
+<meta name="robots" content="noindex">
 <style>
-:root{
-  --paper:#f5f7f9; --card:#ffffff; --ink:#132c46; --body:#33465a; --mute:#6a7f93;
-  --line:#dce3ea; --rule:#c6d2dd; --teal:#0f7682;
-  --disp:"Source Serif 4",Georgia,"Times New Roman",serif;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --paper:#0c1620; --card:#14202c; --ink:#e9eff5; --body:#bfccd9; --mute:#8699aa;
-    --line:#22323f; --rule:#2c3f4f; --teal:#49bcc8;
+  :root{--paper:#f5f7f9; --ink:#132c46; --body:#33465a; --teal:#0f7682}
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#0c1620; --ink:#e9eff5; --body:#bfccd9; --teal:#49bcc8}
   }
-}
-:root[data-theme="dark"]{
-  --paper:#0c1620; --card:#14202c; --ink:#e9eff5; --body:#bfccd9; --mute:#8699aa;
-  --line:#22323f; --rule:#2c3f4f; --teal:#49bcc8;
-}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
-body{
-  margin:0; background:var(--paper); color:var(--body);
-  font-family:var(--sans); font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased;
-}
-.wrap{max-width:1000px; margin:0 auto; padding:0 16px}
-
-header.top{padding:52px 0 28px; border-bottom:1px solid var(--line)}
-.eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); font-weight:600; margin:0 0 14px}
-h1{font-family:var(--disp); font-weight:700; color:var(--ink);
-   font-size:clamp(30px,5.4vw,46px); line-height:1.14; margin:0 0 16px; letter-spacing:-.012em}
-.lede{margin:0; max-width:64ch; font-size:clamp(16px,2.3vw,18.5px)}
-.lede strong{color:var(--ink); font-weight:600}
-
-.stack{display:flex; flex-wrap:wrap; gap:7px; margin:24px 0 0}
-.stack span{
-  font-family:var(--mono); font-size:12.5px; color:var(--ink); background:var(--card);
-  border:1px solid var(--rule); border-radius:5px; padding:5px 10px; line-height:1.3
-}
-
-nav.toc{display:flex; flex-wrap:wrap; gap:8px; margin:22px 0 0}
-nav.toc a{
-  font-size:13.5px; font-weight:600; color:var(--mute); text-decoration:none;
-  border-bottom:1px solid transparent; padding:2px 0
-}
-nav.toc a:hover{color:var(--ink); border-bottom-color:var(--ink)}
-nav.toc em{color:var(--rule); font-style:normal}
-
-section{padding:46px 0 0; border-top:1px solid var(--line); margin-top:44px}
-section:first-of-type{border-top:0; margin-top:0}
-.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--mute); margin:0 0 9px; font-weight:600}
-h2{font-family:var(--disp); font-weight:600; color:var(--ink);
-   font-size:clamp(22px,3.6vw,31px); line-height:1.2; margin:0 0 12px; letter-spacing:-.008em}
-section > p{max-width:68ch; margin:0 0 18px}
-p b, li b{color:var(--ink); font-weight:600}
-
-figure{
-  margin:22px 0 0; background:var(--card); border:1px solid var(--line);
-  border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(19,44,70,.07)
-}
-figure img{display:block; width:100%; height:auto}
-figcaption{font-size:13.5px; line-height:1.6; color:var(--mute); padding:13px 16px; border-top:1px solid var(--line)}
-figcaption b{color:var(--body); font-weight:600}
-.two{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:22px 0 0}
-.two figure{margin:0}
-.two .fit img{height:390px; object-fit:contain; object-position:top center; background:var(--card)}
-
-.facts{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
-  gap:1px; background:var(--line); border:1px solid var(--line);
-  border-radius:9px; overflow:hidden; margin:22px 0 0
-}
-.facts div{background:var(--card); padding:14px 16px}
-.facts dt{font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--mute); font-weight:600; margin:0 0 4px}
-.facts dd{margin:0; font-family:var(--mono); font-size:17px; color:var(--ink); font-weight:500; line-height:1.3}
-.facts small{display:block; font-family:var(--sans); font-size:12.5px; color:var(--mute); font-weight:400; margin-top:3px}
-
-ul.pts{margin:0 0 4px; padding:0 0 0 1.1em; max-width:68ch}
-ul.pts li{margin:0 0 9px}
-
-footer{margin:48px 0 0; padding:28px 0 56px; border-top:1px solid var(--line)}
-.links{display:flex; flex-wrap:wrap; gap:10px; margin:0 0 22px}
-.links a{font-size:14.5px; font-weight:600; color:var(--ink); text-decoration:none;
-         border:1px solid var(--rule); border-radius:7px; padding:9px 15px}
-.links a:hover{border-color:var(--ink)}
-.src{font-size:12.8px; line-height:1.72; color:var(--mute); margin:0; max-width:82ch}
-.src b{color:var(--body); font-weight:600}
-
-@media (max-width:680px){
-  body{font-size:16px}
-  header.top{padding:34px 0 22px}
-  section{padding:34px 0 0; margin-top:32px}
-  .two{grid-template-columns:1fr}
-  .two .fit img{height:auto}
-}
+  body{
+    margin:0; min-height:100vh; display:grid; place-items:center;
+    background:var(--paper); color:var(--body); padding:24px; text-align:center;
+    font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif; line-height:1.6
+  }
+  h1{font-size:19px; color:var(--ink); margin:0 0 8px; font-weight:600}
+  a{color:var(--teal)}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-<header class="top">
-  <p class="eyebrow">Applied geoinformatics</p>
-  <h1>From spatial database to browser map</h1>
-  <p class="lede">The analysis is only half of it. The other half is a working system: a routable network in PostGIS, an application programming interface that never writes, twelve layers published as open standards, and a browser client a planner can actually operate. <strong>Four tiers, one compose file, no manual setup step.</strong></p>
-  <div class="stack">
-    <span>PostgreSQL 17.10</span><span>PostGIS 3.6</span><span>pgRouting 4.0.1</span>
-    <span>FastAPI</span><span>asyncpg</span><span>GeoServer 2.28</span>
-    <span>WMS / WFS</span><span>React 19</span><span>Vite</span><span>Leaflet</span>
-    <span>Docker Compose</span><span>nginx</span><span>EPSG:25832</span>
+  <div>
+    <h1>This page has moved</h1>
+    <p>How the platform is built now sits on the project page.<br>
+       <a href="./#platform">Continue to the project page</a></p>
   </div>
-  <nav class="toc">
-    <a href="#arch">Architecture</a><em>/</em>
-    <a href="#db">Database</a><em>/</em>
-    <a href="#routing">Routing</a><em>/</em>
-    <a href="#api">API</a><em>/</em>
-    <a href="#ogc">OGC services</a><em>/</em>
-    <a href="#client">Client</a><em>/</em>
-    <a href="#deploy">Deployment</a>
-  </nav>
-</header>
-
-<section id="arch">
-  <p class="kicker">Architecture</p>
-  <h2>Four tiers, each replaceable on its own</h2>
-  <p>Desktop GIS does the preprocessing once. The database holds the data and does the analysis in place. GeoServer publishes it over open standards. The browser consumes it. Nothing in a tier above reaches past the interface of the tier below, so GeoServer could be swapped for another server, or the React client for a different one, without touching the analysis.</p>
-  <figure style="aspect-ratio:1600/1420">
-    <img src="assets/build/architecture.jpg" width="1600" height="1420" alt="System architecture diagram showing four tiers: desktop GIS preprocessing, a PostGIS data and routing tier, analytical engines, a service tier with FastAPI and GeoServer, and a React and Leaflet presentation tier.">
-    <figcaption><b>System architecture.</b> Geometry is stored and computed in ETRS89 / UTM zone 32N, EPSG:25832, and served to the browser as EPSG:4326. The whole stack rebuilds from the repository with one compose command.</figcaption>
-  </figure>
-</section>
-
-<section id="db">
-  <p class="kicker">Data tier</p>
-  <h2>The analysis runs inside the database</h2>
-  <p>Common table expressions and window functions over a stored travel time matrix, executed in PostgreSQL rather than pulled into a script. That matters for a decision support tool: the platform serves exactly the rows the analysis produced, so the map and the thesis cannot drift apart.</p>
-  <dl class="facts">
-    <div><dt>Tables</dt><dd>12<small>plus 3 publication views</small></dd></div>
-    <div><dt>Indexes</dt><dd>34<small>GiST and B-tree</small></dd></div>
-    <div><dt>Database size</dt><dd>278 MB</dd></div>
-    <div><dt>Population cells</dt><dd>10,800<small>1 km grid</small></dd></div>
-    <div><dt>Routed pairs</dt><dd>626,381<small>baseline, 755,981 in all</small></dd></div>
-    <div><dt>Scenario rows</dt><dd>129,600</dd></div>
-  </dl>
-  <figure style="aspect-ratio:1600/836">
-    <img src="assets/build/schema.jpg" loading="lazy" width="1600" height="836" alt="Entity relationship diagram of the healthcare_accessibility PostGIS database, showing source tables, routing tables, result tables and their keys.">
-    <figcaption><b>Schema.</b> Source entities on the left, the routing graph beneath them, and the derived result tables on the right. Every result table keys back to a single 1 km grid cell.</figcaption>
-  </figure>
-  <figure style="aspect-ratio:1600/622">
-    <img src="assets/build/tables.jpg" loading="lazy" width="1600" height="622" alt="Table listing every database table with its purpose, geometry type and row count.">
-    <figcaption><b>Tables and row counts.</b> Counts read from the live database. Three GeoServer publication views sit on top of these and are not listed.</figcaption>
-  </figure>
-</section>
-
-<section id="routing">
-  <p class="kicker">Routing</p>
-  <h2>A road network that was tested, not assumed</h2>
-  <p>OpenStreetMap roads become a routable graph with pgRouting: <b>35,062 segments</b>, <b>11,156 km</b>, <b>34,114 junctions</b>. Speeds are assigned per road class, then every populated cell is routed to every hospital with a many to many Dijkstra.</p>
-  <p>Connectivity was checked rather than taken on trust. The graph splits into 212 components; the largest holds 31,335 junctions, and <b>no hospital and no populated cell falls outside it</b>. A routing graph that is silently disconnected produces confident nonsense, so this check runs before any travel time is computed.</p>
-  <figure style="aspect-ratio:1600/1098">
-    <img src="assets/build/routing.jpg" loading="lazy" width="1600" height="1098" alt="Map showing an example least cost route in red from the most remote populated cell to its nearest emergency capable hospital, over the road network.">
-    <figcaption><b>One shortest path.</b> The least cost route from the most remote populated cell to its nearest emergency capable hospital, computed with pgRouting Dijkstra over the same graph the full matrix uses.</figcaption>
-  </figure>
-</section>
-
-<section id="api">
-  <p class="kicker">Service tier</p>
-  <h2>An interface that cannot write</h2>
-  <p>FastAPI, async throughout, pooled with asyncpg. Nine endpoints plus a WebSocket channel for long operations. Two decisions shape it:</p>
-  <ul class="pts">
-    <li><b>GeoJSON is assembled inside PostGIS.</b> <code>ST_AsGeoJSON</code> and <code>json_build_object</code> do the work, so a whole surface is one round trip and no geometry is ever reshaped in Python.</li>
-    <li><b>The database role is least privilege.</b> The service connects as <code>gis_readonly</code>, a login that can connect and select and nothing else. No endpoint writes. Closure scenarios are derived offline from the stored matrix and served from a results table, so simulating a hospital closure never mutates the baseline.</li>
-  </ul>
-  <figure style="aspect-ratio:1600/729">
-    <img src="assets/build/api-endpoints.jpg" loading="lazy" width="1600" height="729" alt="Specification table of the nine API endpoints with method, path, key parameters, response type and purpose.">
-    <figcaption><b>Endpoint specification.</b> All GeoJSON is returned in EPSG:4326. The service group is one of surgery, geriatrics or emergency; scenario 0 is the baseline and 1 to 4 are the closure scenarios.</figcaption>
-  </figure>
-</section>
-
-<section id="ogc">
-  <p class="kicker">Interoperability</p>
-  <h2>Open standards out, not a private format</h2>
-  <p>GeoServer publishes <b>12 layers</b> as <b>Web Map Service</b> and <b>Web Feature Service</b>: 10 defined by a SQL view, plus the hospital and district layers read straight from their tables. Each layer is defined by a SQL view kept in the repository rather than configured by hand in a web form, so the publication is reproducible. Styling travels with the layer as a Styled Layer Descriptor, versioned in the repository beside the queries, so a layer renders identically wherever it is served and a change to a class break shows up in a diff. Native geometry is EPSG:25832 and GeoServer reprojects to EPSG:4326 on the way out.</p>
-  <figure style="aspect-ratio:1600/1000">
-    <img src="assets/build/gs-layers.jpg" loading="lazy" width="1600" height="1000" alt="GeoServer layer list showing the published healthcare layers, each enabled, with native SRS EPSG:4326.">
-    <figcaption><b>Published layers.</b> Accessibility, fragility and vulnerability surfaces per service group, plus the hospital, district and scenario difference layers.</figcaption>
-  </figure>
-  <p>The test of an open standard is whether something other than your own client can read it. These layers load straight into QGIS over the network, with their server side styling intact and no export step.</p>
-  <figure style="aspect-ratio:1600/1188">
-    <img src="assets/build/gs-qgis.jpg" loading="lazy" width="1600" height="1188" alt="QGIS desktop with the platform's GeoServer layers loaded over the network, showing the fragility surface rendered with its server side styling.">
-    <figcaption><b>Consumed by a third party client.</b> The same layers in QGIS, pulled live from GeoServer. Nothing was exported or converted to get them there.</figcaption>
-  </figure>
-  <div class="two">
-    <figure class="fit">
-      <img src="assets/build/gs-metadata.jpg" loading="lazy" width="1600" height="778" alt="WMS GetCapabilities XML document showing the service title, abstract, keywords and contact information.">
-      <figcaption><b>Discovery metadata</b> carried in GetCapabilities, following ISO 19115 practice: title, abstract, keywords, lineage and contact.</figcaption>
-    </figure>
-    <figure class="fit">
-      <img src="assets/build/gs-store.jpg" loading="lazy" width="986" height="1839" alt="GeoServer PostGIS store configuration connecting to the healthcare_accessibility database as the gis_readonly user.">
-      <figcaption><b>The store connects as <code>gis_readonly</code></b>, not as a superuser, so a misconfigured layer cannot alter the data behind it.</figcaption>
-    </figure>
-  </div>
-</section>
-
-<section id="client">
-  <p class="kicker">Presentation tier</p>
-  <h2>A client a planner can operate</h2>
-  <p>React 19 built with Vite, Leaflet for the map. Raster surfaces arrive as Web Map Service tiles from GeoServer; statistics, scenarios and cell queries come from the application programming interface. The sidebar switches service group, toggles each layer, sets opacity and swaps the basemap. Panels on the right carry coverage totals, coverage by district, a covered against uncovered breakdown, the scenario console and the multi criteria vulnerability ranking.</p>
-  <figure style="aspect-ratio:1600/771">
-    <img src="assets/build/app-dashboard.jpg" loading="lazy" width="1600" height="771" alt="The full platform dashboard: sidebar controls on the left, the accessibility surface on a Leaflet map in the centre, and statistics panels on the right.">
-    <figcaption><b>The dashboard.</b> Geriatric accessibility on the baseline, with statewide coverage, coverage by district and the scenario console all on one screen.</figcaption>
-  </figure>
-  <figure style="aspect-ratio:1600/771">
-    <img src="assets/build/app-query.jpg" loading="lazy" width="1600" height="771" alt="A popup on a single grid cell showing its fragility score, class, travel time, dependency gap, elderly share and district.">
-    <figcaption><b>Click any cell.</b> The popup returns that cell's fragility score and class, its travel time, the dependency gap to the second nearest provider, its elderly share and its district. Every number traceable to a row.</figcaption>
-  </figure>
-  <figure style="aspect-ratio:1600/770">
-    <img src="assets/build/app-scenario.jpg" loading="lazy" width="1600" height="770" alt="The scenario overlay showing the change in travel time after a hospital closure, drawn over the baseline surface.">
-    <figcaption><b>Closure simulation.</b> Switching on a scenario overlays the per cell change against the baseline and updates the affected population in the console beneath it.</figcaption>
-  </figure>
-  <figure style="aspect-ratio:1600/1411">
-    <img src="assets/build/app-responsive.jpg" loading="lazy" width="1600" height="1411" alt="The platform at a narrow viewport, with the sidebar, map and panels stacked for a small screen.">
-    <figcaption><b>Narrow viewport.</b> The layout reflows rather than breaking, so the platform is usable away from a desk.</figcaption>
-  </figure>
-</section>
-
-<section id="deploy">
-  <p class="kicker">Deployment</p>
-  <h2>One command, four containers</h2>
-  <p>nginx serves the built client and proxies <code>/api</code> and <code>/geoserver</code>, so the browser sees a single origin and there is no cross origin configuration to get wrong. The database keeps its data in a named volume, GeoServer its workspace and styles in another. Secrets come from the environment and are never committed; the repository ships an example file and a bootstrap that creates the least privilege role on first start.</p>
-  <figure style="aspect-ratio:1600/785">
-    <img src="assets/build/deployment.jpg" loading="lazy" width="1600" height="785" alt="Deployment diagram showing a Docker host running frontend, backend, geoserver and database containers behind nginx on a cloud virtual machine.">
-    <figcaption><b>Deployment.</b> Four containers on one host. The same compose file runs on a laptop and on the cloud instance serving the live platform.</figcaption>
-  </figure>
-  <figure style="aspect-ratio:1600/865">
-    <img src="assets/build/performance.jpg" loading="lazy" width="1600" height="865" alt="Performance benchmark table listing each operation, its target and its measured time, all within target.">
-    <figcaption><b>Benchmarks.</b> Targets set first, then measured on the development host. The origin to destination matrix is precomputed, which is what keeps the interactive operations fast.</figcaption>
-  </figure>
-</section>
-
-<footer>
-  <div class="links">
-    <a href="./">Project page</a>
-    <a href="compare.html">Paired maps</a>
-    <a href="https://34-107-87-228.sslip.io">Live platform</a>
-    <a href="https://github.com/Yasir-Hameed-HCU/web-gis-decision-support-system">Source code</a>
-  </div>
-  <p class="src"><b>Built for</b> an M.Sc. thesis in Geodesy and Geoinformatics, HafenCity University Hamburg, 2026. <b>Counts and versions</b> on this page were read from the running database. <b>Hospitals, departments and planned beds:</b> Krankenhausplan Mecklenburg-Vorpommern, Stand Dezember 2022, geocoded by the author. <b>Service profiles:</b> Gemeinsamer Bundesausschuss, Qualit&auml;tsberichte der Krankenh&auml;user. <b>Road network:</b> OpenStreetMap via Geofabrik 2024. <b>Population:</b> Zensus 2022, 1 km grid. <b>Boundaries:</b> Bundesamt f&uuml;r Kartographie und Geod&auml;sie, VG250 2023. <b>CRS:</b> ETRS89 / UTM 32N, EPSG:25832.</p>
-</footer>
-
-</div>
+  <script>location.replace("./#platform");</script>
 </body>
 </html>

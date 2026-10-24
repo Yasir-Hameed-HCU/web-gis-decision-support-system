@@ -116,6 +116,7 @@ figcaption b{color:var(--body);font-weight:600}
 .formula{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--sand);
   border-radius:3px;padding:1.15rem 1.3rem;margin:1.4rem 0;overflow-x:auto}
 .formula code{font-family:var(--mono);font-size:1rem;color:var(--ink);white-space:nowrap}
+    .col code{font-family:var(--mono);font-size:.86em;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:.06em .32em}
 .terms{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
 .terms li{display:grid;grid-template-columns:3.4rem 1fr;gap:.9rem;align-items:baseline;font-size:.93rem}
 .terms .w{font-family:var(--mono);font-size:.82rem;color:var(--teal)}
@@ -294,11 +295,11 @@ footer{border-top:1px solid var(--line);padding-block:2.4rem 3.2rem;font-size:.9
       <h3>System</h3>
       <h2>Four layers, one source of truth</h2>
       <p>Analysis executes inside the database rather than in an external script, so the layer that serves the browser reads the same rows the analysis wrote.</p>
-      <p><a href="build.html">See how each tier is built, from the routing graph to the published layers &rarr;</a></p>
+      <p><a href="#platform">See how each tier is built, from the routing graph to the published layers &rarr;</a></p>
     </div>
     <figure class="fig narrow">
       <img src="assets/fig-10.jpg" alt="System architecture diagram showing the data layer, analytical layer, service layer and presentation layer of the platform" loading="lazy">
-      <figcaption><b>Figure 5.</b> Platform architecture. PostgreSQL with PostGIS and pgRouting holds the data and executes the analysis; FastAPI serves analytical results; GeoServer publishes the spatial layers over OGC services; React and Leaflet render the client. Own elaboration.</figcaption>
+      <figcaption><b>Figure 4.</b> Platform architecture. PostgreSQL with PostGIS and pgRouting holds the data and executes the analysis; FastAPI serves analytical results; GeoServer publishes the spatial layers over OGC services; React and Leaflet render the client. Own elaboration.</figcaption>
     </figure>
   </section>
 
@@ -321,7 +322,7 @@ footer{border-top:1px solid var(--line);padding-block:2.4rem 3.2rem;font-size:.9
     </div>
     <figure class="fig">
       <img src="assets/fig-11.jpg" alt="Synthesis decision map combining geriatric fragility with the keystone hospitals identified by closure simulation" loading="lazy">
-      <figcaption><b>Figure 4.</b> Geriatric fragility combined with the hospitals whose closure displaces the largest populations. A keystone is defined operationally, as the facility serving the largest population as unique nearest provider, rather than chosen by judgement. Own elaboration. CRS: EPSG:25832.</figcaption>
+      <figcaption><b>Figure 5.</b> Geriatric fragility combined with the hospitals whose closure displaces the largest populations. A keystone is defined operationally, as the facility serving the largest population as unique nearest provider, rather than chosen by judgement. Own elaboration. CRS: EPSG:25832.</figcaption>
     </figure>
   </section>
 
@@ -336,6 +337,114 @@ footer{border-top:1px solid var(--line);padding-block:2.4rem 3.2rem;font-size:.9
       <div><h3>Analysis</h3><p>PostgreSQL 17 with PostGIS and pgRouting. Common table expressions and window functions over the stored matrix, executed inside the database rather than in an external script, so the platform serves the same rows the analysis produced.</p></div>
       <div><h3>Delivery</h3><p>FastAPI for analytical endpoints, GeoServer publishing 12 layers as Web Map Service and Web Feature Service with portable styling, React and Leaflet in the browser. Every endpoint responds in under 0.4 seconds. Reproducible from a single compose file.</p></div>
     </div>
+  </section>
+
+  <section id="platform">
+    <div class="col">
+      <h3>Data tier</h3>
+      <h2>The analysis runs inside the database</h2>
+      <p>Common table expressions and window functions run over the stored travel-time matrix in PostgreSQL itself, not in an external script. For a decision-support tool that distinction matters: the platform serves exactly the rows the analysis produced, so the map on screen and the result in the thesis cannot drift apart.</p>
+    </div>
+    <div class="notes">
+      <div><h3>Tables</h3><p><b>12</b>, plus 3 publication views</p></div>
+      <div><h3>Indexes</h3><p><b>34</b>, GiST and B-tree</p></div>
+      <div><h3>Database size</h3><p><b>278 MB</b></p></div>
+      <div><h3>Population cells</h3><p><b>10,800</b> at 1 km</p></div>
+      <div><h3>Routed pairs</h3><p><b>626,381</b> at baseline, 755,981 across all scenarios</p></div>
+      <div><h3>Scenario rows</h3><p><b>129,600</b></p></div>
+    </div>
+    <figure class="fig">
+      <img src="assets/build/schema.jpg" alt="Entity relationship diagram of the PostGIS database showing source tables, routing tables and result tables" loading="lazy">
+      <figcaption><b>Figure 6.</b> Database schema. Source entities, the routing graph beneath them, and the derived result tables, each keyed back to a single 1 km grid cell. Own elaboration.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Routing</h3>
+      <h2>A road network that was tested, not assumed</h2>
+      <p>OpenStreetMap roads become a routable graph in pgRouting with a speed assigned per road class. Every populated cell is then routed to every hospital with a many-to-many Dijkstra and the matrix is stored once rather than recomputed per request, which is what keeps the interactive parts of the platform responsive.</p>
+      <p>Connectivity was established before any travel time was computed. A graph that is silently split returns confident nonsense rather than an error, so the components were counted and the hospitals and populated cells checked against the largest one.</p>
+    </div>
+    <figure class="fig">
+      <img src="assets/build/routing.jpg" alt="Map of one least cost route from the most remote populated cell to its nearest emergency capable hospital" loading="lazy">
+      <figcaption><b>Figure 7.</b> One least-cost route, from the most remote populated cell to its nearest emergency-capable hospital, over the same graph the full matrix uses. Own elaboration. CRS: EPSG:25832.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Service tier</h3>
+      <h2>An interface that cannot write</h2>
+      <p>FastAPI, asynchronous throughout and pooled with asyncpg. Nine endpoints and a WebSocket channel for long operations. Two decisions shape it. GeoJSON is assembled inside PostGIS with <code>ST_AsGeoJSON</code>, so a whole surface is one round trip and no geometry is ever reshaped in Python. And the service connects as <code>gis_readonly</code>, a login that can connect and select and nothing else, so no endpoint can write at all. Closure scenarios are derived offline and served from a results table: simulating a closure never touches the baseline.</p>
+    </div>
+    <figure class="fig">
+      <img src="assets/build/api-endpoints.jpg" alt="Specification table of the nine API endpoints with method, path, parameters, response type and purpose" loading="lazy">
+      <figcaption><b>Figure 8.</b> Endpoint specification. All GeoJSON is returned in EPSG:4326; scenario 0 is the baseline and 1 to 4 the closure scenarios. Own elaboration.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Interoperability</h3>
+      <h2>Open standards out, not a private format</h2>
+      <p>GeoServer publishes 12 layers as Web Map Service and Web Feature Service: 10 of them defined by a SQL view kept in the repository rather than configured by hand in a web form, plus the hospital and district layers read straight from their tables. Styling travels with each layer as a Styled Layer Descriptor, versioned beside the queries, so a change to a class break or a colour shows up in a diff. Native geometry is EPSG:25832 and GeoServer reprojects to EPSG:4326 on the way out.</p>
+    </div>
+    <figure class="fig">
+      <img src="assets/build/gs-layers.jpg" alt="GeoServer layer list showing the published healthcare layers, each enabled" loading="lazy">
+      <figcaption><b>Figure 9.</b> Published layers in GeoServer: accessibility, fragility and vulnerability surfaces per service group, with the hospital, district and scenario-difference layers. Own elaboration.</figcaption>
+    </figure>
+    <div class="col">
+      <p>The test of an open standard is whether something other than your own client can read it.</p>
+    </div>
+    <figure class="fig">
+      <img src="assets/build/gs-qgis.jpg" alt="QGIS desktop with the platform's GeoServer layers loaded live over the network, rendered with their server side styling" loading="lazy">
+      <figcaption><b>Figure 10.</b> The same layers in QGIS, pulled live from GeoServer with their server-side styling intact. Nothing was exported or converted to get them there. Own elaboration.</figcaption>
+    </figure>
+    <figure class="fig">
+      <img src="assets/build/gs-metadata.jpg" alt="WMS GetCapabilities XML showing service title, abstract, keywords and contact information" loading="lazy">
+      <figcaption><b>Figure 11.</b> Discovery metadata carried in GetCapabilities following ISO 19115 practice: title, abstract, keywords, lineage and contact. Own elaboration.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Deployment</h3>
+      <h2>One command, four containers</h2>
+      <p>nginx serves the built client and proxies <code>/api</code> and <code>/geoserver</code>, so the browser sees a single origin and there is no cross-origin configuration to get wrong. The database and the GeoServer workspace each keep state in a named volume. Secrets come from the environment and are never committed: the repository ships an example file and a bootstrap that creates the least-privilege role on first start.</p>
+    </div>
+    <figure class="fig">
+      <img src="assets/build/deployment.jpg" alt="Deployment diagram showing frontend, backend, GeoServer and database containers behind nginx on one host" loading="lazy">
+      <figcaption><b>Figure 12.</b> Deployment. Four containers on one host; the same compose file runs on a laptop and on the instance serving the live platform. Own elaboration.</figcaption>
+    </figure>
+    <figure class="fig">
+      <img src="assets/build/performance.jpg" alt="Performance benchmark table listing each operation, its target and its measured time" loading="lazy">
+      <figcaption><b>Figure 13.</b> Benchmarks, targets set before measurement and taken on the development host. The origin-to-destination matrix is precomputed, which is what keeps the interactive operations fast. Own elaboration.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="col">
+      <h3>Presentation tier</h3>
+      <h2>A client a planner can operate</h2>
+      <p>React 19 built with Vite, Leaflet for the map. Raster surfaces arrive as Web Map Service tiles from GeoServer; statistics, scenarios and cell queries come from the application programming interface. The sidebar switches service group, toggles each layer, sets opacity and swaps the basemap. The panels carry coverage totals, coverage by district, a covered against uncovered breakdown, the scenario console and the multi-criteria vulnerability ranking.</p>
+    </div>
+    <figure class="fig">
+      <img src="assets/build/app-dashboard.jpg" alt="The platform dashboard with sidebar controls, the accessibility surface on a Leaflet map, and statistics panels" loading="lazy">
+      <figcaption><b>Figure 14.</b> The dashboard: geriatric accessibility on the baseline, with statewide coverage, coverage by district and the scenario console on one screen. Own elaboration.</figcaption>
+    </figure>
+    <figure class="fig">
+      <img src="assets/build/app-query.jpg" alt="A popup on one grid cell showing its fragility score, class, travel time, dependency gap and elderly share" loading="lazy">
+      <figcaption><b>Figure 15.</b> Querying a single cell returns its fragility score and class, travel time, the dependency gap to the second-nearest provider, its elderly share and its district. Every value traceable to a stored row. Own elaboration.</figcaption>
+    </figure>
+    <figure class="fig">
+      <img src="assets/build/app-scenario.jpg" alt="The scenario overlay showing change in travel time after a hospital closure, drawn over the baseline surface" loading="lazy">
+      <figcaption><b>Figure 16.</b> Closure simulation in the client. Enabling a scenario overlays the per-cell change against the baseline and updates the affected population beneath it. Own elaboration.</figcaption>
+    </figure>
+    <figure class="fig narrow">
+      <img src="assets/build/app-responsive.jpg" alt="The platform at a narrow viewport, with sidebar, map and panels stacked for a small screen" loading="lazy">
+      <figcaption><b>Figure 17.</b> The layout at a narrow viewport. It reflows rather than breaking, so the platform is usable away from a desk. Own elaboration.</figcaption>
+    </figure>
   </section>
 
   <section>
@@ -359,7 +468,7 @@ footer{border-top:1px solid var(--line);padding-block:2.4rem 3.2rem;font-size:.9
     </div>
     <div class="res" style="margin-top:1.3rem">
       <a href="compare.html"><i>&rarr;</i>Paired maps, side by side</a>
-      <a href="build.html"><i>&rarr;</i>How it is built</a>
+      <a href="#platform"><i>&rarr;</i>How it is built</a>
       <a href="https://34-107-87-228.sslip.io" target="_blank" rel="noopener"><i>&rarr;</i>Live platform</a>
       <a href="https://github.com/Yasir-Hameed-HCU/web-gis-decision-support-system" target="_blank" rel="noopener"><i>&rarr;</i>Code repository</a>
       <a href="https://www.linkedin.com/in/yasir-hameed-98aa05245" target="_blank" rel="noopener"><i>&rarr;</i>LinkedIn</a>
